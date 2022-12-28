@@ -1,0 +1,110 @@
+2) Bank database
+Consider the following Entities and their Relationships for Bank database.
+Branch (bid integer, brname char (30), brcity char (10))
+Customer (cno integer, cname char (20), caddr char (35), city char(20))
+Loan_application (lno integer, l_amt_require money, l_amt_approved money, l_date date)
+The relationships are as follows:
+Branch, Customer, Loan_application are related with ternary relationship.
+Ternary (bid integer, cno integer, lno integer).
+Solve the following queries in PostgreSQL
+
+
+
+CREATE TABLE Branch (
+bid INTEGER PRIMARY KEY,
+brname CHAR(30) NOT NULL,
+brcity CHAR(10) NOT NULL
+);
+
+CREATE TABLE Customer (
+cno INTEGER PRIMARY KEY,
+cname CHAR(20) NOT NULL,
+caddr CHAR(35) NOT NULL,
+city CHAR(20) NOT NULL
+);
+
+CREATE TABLE Loan_application (
+lno INTEGER PRIMARY KEY,
+l_amt_require MONEY NOT NULL,
+l_amt_approved MONEY NOT NULL,
+l_date DATE NOT NULL
+);
+
+CREATE TABLE Ternary (
+bid INTEGER REFERENCES Branch(bid),
+cno INTEGER REFERENCES Customer(cno),
+lno INTEGER REFERENCES Loan_application(lno),
+PRIMARY KEY (bid, cno, lno)
+);
+
+
+
+
+
+1. Find out the total loan amount approved at ‘Nagar’ Branch.
+
+SELECT SUM(l_amt_approved) FROM Ternary t
+INNER JOIN Branch b ON t.bid = b.bid
+WHERE b.brcity = 'Nagar';
+
+
+2. Find the names of customers for the ‘Karve Nagar’ branch.
+
+SELECT c.cname FROM Ternary t
+INNER JOIN Branch b ON t.bid = b.bid
+INNER JOIN Customer c ON t.cno = c.cno
+WHERE b.brcity = 'Karve Nagar';
+
+
+3. List the names of customers who have taken loan from the branch in the same city they live.
+
+SELECT c.cname FROM Ternary t
+INNER JOIN Branch b ON t.bid = b.bid
+INNER JOIN Customer c ON t.cno = c.cno
+WHERE b.brcity = c.city;
+
+
+
+4. List the names of customers who have received loan less than their requirement.
+
+
+SELECT c.cname FROM Ternary t
+INNER JOIN Loan_application l ON t.lno = l.lno
+INNER JOIN Customer c ON t.cno = c.cno
+WHERE l.l_amt_approved < l.l_amt_require;
+
+
+5. List the names of the customer along with the branch names who have applied for loan in the month of
+.
+
+SELECT c.cname, b.brname FROM Ternary t
+INNER JOIN Loan_application l ON t.lno = l.lno
+INNER JOIN Customer c ON t.cno = c.cno
+INNER JOIN Branch b ON t.bid = b.bid
+WHERE EXTRACT(MONTH FROM l.l_date) = _;
+
+
+6. Find the names of customers who required loan with amount > 100000.
+
+
+
+
+
+7. Find the maximum loan amount approved.
+
+
+
+
+8. Count number of customers from ‘ShivajiNagar’ branch.
+
+
+
+
+9. List names of customers requesting for loan amount in between 200000 and 400000.
+
+
+
+
+10. List branch wise name of customers
+
+
