@@ -1,0 +1,159 @@
+SET B (Number of Slot – 1)
+1) Movie-Actor Database
+Consider the following Entities and their Relationships for Movie-Actor database. 
+Movie (m_name varchar (25), release_year integer, budget money)
+Actor (a_name varchar (20), role char(20), charges money, a_address varchar (20))
+Producer (producer_id integer, p_name char (30), p_address varchar (20))
+Each actor has acted in one or more movies. Each producer has produced many movies and each 
+movie can be produced by more than one producers. Each movie has one or more actors acting in it, 
+in different roles.
+Constraints: Primary Key,role and p_name should not be null.
+
+CREATE TABLE Movie (
+    m_name VARCHAR(25) PRIMARY KEY,
+    release_year INTEGER NOT NULL,
+    budget MONEY NOT NULL
+);
+
+CREATE TABLE Actor (
+    a_name VARCHAR(20) PRIMARY KEY,
+    role CHAR(20) NOT NULL,
+    charges MONEY NOT NULL,
+    a_address VARCHAR(20)
+);
+
+CREATE TABLE producer (
+    producer_id INTEGER PRIMARY KEY,
+    p_name CHAR(30) NOT NULL,
+    p_address VARCHAR(20)
+);
+
+CREATE TABLE movie_actor (
+    m_name VARCHAR(25) REFERENCES Movie(m_name),
+    a_name VARCHAR(20) REFERENCES actor(a_name),
+    role CHAR(20) NOT NULL,
+    PRIMARY KEY (m_name, a_name)
+);
+
+CREATE TABLE movie_producer (
+    m_name VARCHAR(25) REFERENCES Movie(m_name),
+    producer_id INTEGER REFERENCES producer(producer_id),
+    PRIMARY KEY (m_name, producer_id)
+);
+
+
+
+INSERT INTO Movie (m_name, release_year, budget)
+VALUES ('The Shawshank Redemption', 1994, 1000000),
+       ('The Godfather', 1972, 5000000),
+       ('The Godfather: Part II', 1974, 6000000),
+       ('The Dark Knight', 2008, 15000000),
+       ('12 Angry Men', 1957, 350000);
+
+INSERT INTO Actor (a_name, role, charges, a_address)
+VALUES ('Tim Robbins', 'Andy Dufresne', 500000, 'Los Angeles'),
+       ('Marlon Brando', 'Vito Corleone', 750000, 'New York'),
+       ('Robert De Niro', 'Vito Corleone', 900000, 'Los Angeles'),
+       ('Heath Ledger', 'The Joker', 1000000, 'Sydney'),
+       ('Henry Fonda', 'Juror 8', 200000, 'Los Angeles');
+
+INSERT INTO producer (producer_id, p_name, p_address)
+VALUES (1, 'Francis Ford Coppola', 'Los Angeles'),
+       (2, 'Christopher Nolan', 'London'),
+       (3, 'Sidney Lumet', 'New York');
+
+INSERT INTO movie_actor (m_name, a_name, role)
+VALUES ('The Shawshank Redemption', 'Tim Robbins', 'Andy Dufresne'),
+       ('The Shawshank Redemption', 'Morgan Freeman', 'Ellis Boyce'),
+       ('The Godfather', 'Marlon Brando', 'Vito Corleone'),
+       ('The Godfather: Part II', 'Robert De Niro', 'Vito Corleone'),
+       ('The Dark Knight', 'Heath Ledger', 'The Joker'),
+       ('12 Angry Men', 'Henry Fonda', 'Juror 8'),
+       ('12 Angry Men', 'Lee J. Cobb', 'Juror 3');
+
+INSERT INTO movie_producer (m_name, producer_id)
+VALUES ('The Shawshank Redemption', 1),
+       ('The Godfather', 1),
+       ('The Godfather: Part II', 1),
+       ('The Dark Knight', 2),
+       ('12 Angry Men', 3);
+
+
+
+Solve the following Queries in PostgreSQL:
+1. List the names of the actors and their movie names.
+
+SELECT a_name, m_name FROM movie_actor;
+
+
+2. List the names of movies whose producer is ‘Mr.Subhash Ghai’
+
+SELECT m_name FROM movie_producer mp
+JOIN producer p ON mp.producer_id = p.producer_id
+WHERE p.p_name = 'Mr.Subhash Ghai';
+
+
+3. Display details of the movies with the minimum budget.
+
+SELECT m.*
+FROM movie m
+WHERE m.budget = (SELECT MIN(budget) FROM movie);
+
+
+4. List the names of movies released after year 2015.
+
+SELECT m_name
+FROM movie
+WHERE release_year > 2015;
+
+
+5. Display count and total budget of all movies released in year2017.
+
+SELECT COUNT(*) AS num_movies, SUM(budget) AS total_budget
+FROM movie
+WHERE release_year = 2017;
+
+
+6. List the names of actors who have acted in minimum number of movies.
+
+SELECT a_name
+FROM actor
+WHERE (SELECT COUNT(*) FROM movie_actor WHERE a_name = actor.a_name) = (SELECT MIN(num_movies) FROM (SELECT a_name, COUNT(*) AS num_movies FROM movie_actor GROUP BY a_name) AS actor_movies);
+
+
+7. List the names of movies produced by more than one producer.
+
+SELECT m_name
+FROM movie_producer
+GROUP BY m_name
+HAVING COUNT(*) > 1;
+
+
+8. List the names of actors who played the role of ‘Villan’.
+
+SELECT a_name
+FROM actor
+WHERE role = 'Villan';
+
+
+
+9. List the names of actors who have acted in at least one movie, in which ‘Mr.Ritesh Deshmukh’ 
+has acted.
+
+SELECT DISTINCT a1.a_name
+FROM actor a1
+JOIN movie_actor ma1 ON a1.a_name = ma1.a_name
+JOIN movie m ON ma1.m_name = m.m_name
+JOIN movie_actor ma2 ON m.m_name = ma2.m_name
+JOIN actor a2 ON ma2.a_name = a2.a_name
+WHERE a2.a_name = 'Mr.Ritesh Deshmukh' AND a1.a_name != 'Mr.Ritesh Deshmukh';
+
+
+
+10. Display total number of actors acted in movie ‘Sholey’.
+SELECT COUNT(*)
+FROM movie_actor
+WHERE m_name = 'Sholey';
+
+
+
