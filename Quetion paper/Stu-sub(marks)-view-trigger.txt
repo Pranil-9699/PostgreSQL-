@@ -1,0 +1,108 @@
+Create the following database in 3NF using PostgresSQL. 
+Q1) Consider the following Student-Marks database.
+
+Student (Rollno integer, sname varchar (30), city varchar (50), class varchar (10)) 
+Subject (Scode varchar (10), subject_name varchar (20))
+
+Relationship:
+
+Student-Subject related with many-to-many relationship with attributes marks_scored.
+
+Constraints: Primary key, sname should not be null.
+
+
+CREATE TABLE Student (
+  Rollno integer PRIMARY KEY,
+  sname varchar(30) NOT NULL,
+  city varchar(50),
+  class varchar(10),
+);
+
+INSERT INTO Student (Rollno, sname, city, class)
+VALUES (1, 'John', 'New York', 'A'),
+       (2, 'Jane', 'Chicago', 'B'),
+       (3, 'Chris', 'San Francisco', 'C'),
+       (4, 'Emily', 'Los Angeles', 'D'),
+       (5, 'Sam', 'Boston', 'E');
+
+
+
+CREATE TABLE Subject (
+  Scode varchar(10) PRIMARY KEY,
+  subject_name varchar(20)
+);
+
+INSERT INTO Subject (Scode, subject_name)
+VALUES ('MATH101', 'Mathematics'),
+       ('SCI201', 'Science'),
+       ('HIST301', 'History'),
+       ('ENG401', 'English'),
+       ('ART501', 'Art');
+
+
+CREATE TABLE StudentSubject (
+  Rollno integer REFERENCES Student(Rollno),
+  Scode varchar(10) REFERENCES Subject(Scode),
+  marks_scored integer,
+  PRIMARY KEY (Rollno, Scode)
+);
+
+INSERT INTO StudentSubject (Rollno, Scode, marks_scored)
+VALUES (1, 'MATH101', 90),
+       (1, 'SCI201', 80),
+       (2, 'MATH101', 85),
+       (2, 'SCI201', 95),
+       (3, 'HIST301', 75),
+       (4, 'ENG401', 90),
+       (4, 'ART501', 95),
+       (5, 'SCI201', 80),
+       (5, 'HIST301', 90);
+
+Create a View
+1) To display details of students whose name starts with the letter 'A':
+
+CREATE VIEW StudentDetails_A AS
+SELECT Rollno, sname, city, class
+FROM Student
+WHERE sname LIKE 'A%';
+
+select StudentDetails_A;
+
+2) To display details of students who have scored less than 40 marks.
+
+CREATE VIEW StudentDetails_LowMarks AS
+SELECT s.Rollno, s.sname, s.city, s.class, ss.marks_scored
+FROM Student s
+INNER JOIN StudentSubject ss ON s.Rollno = ss.Rollno
+WHERE ss.marks_scored < 40;
+
+select StudentDetails_LowMarks;
+
+----------------------quetion 2----------------
+
+1) Write a trigger to ensure that the marks entered for a student with respect to a subject is never < 0 and greater than 100.
+
+
+CREATE TRIGGER marks_validation
+BEFORE INSERT OR UPDATE ON StudentSubject
+FOR EACH ROW
+BEGIN
+  IF NEW.marks_scored < 0 OR NEW.marks_scored > 100 THEN
+    RAISE EXCEPTION 'Marks must be between 0 and 100';
+  END IF;
+END;
+
+2) Write a stored function to accept city as an input parameter and display student details:
+
+CREATE FUNCTION get_student_details(city varchar) RETURNS TABLE (Rollno integer, sname varchar, city varchar, class varchar)
+AS '
+BEGIN
+  RETURN QUERY
+  SELECT Rollno, sname, city, class
+  FROM Student
+  WHERE city = city;
+END;
+'LANGUAGE 'plpgsql';
+
+select function get_student_details('New York');
+

@@ -1,0 +1,119 @@
+Create the following database In 3NF using PostgresSQL.
+
+Q1) Consider the following Student-Marks database. 
+
+Student (Rollag integer, sname varchar(30), city varchar(50), class varchar(10)) 
+
+Subject (Scode varchar(10), subject name varchar(20))
+
+Relationship: Student-Subject related with many-to-many relationship with attributes marks scored.
+
+Constraints: Primary key, sname should not be null.
+
+
+CREATE TABLE Student (
+    Rollag INTEGER PRIMARY KEY,
+    sname VARCHAR(30) NOT NULL,
+    city VARCHAR(50) NOT NULL,
+    class VARCHAR(10) NOT NULL
+);
+
+INSERT INTO Student (Rollag, sname, city, class)
+VALUES (1, 'John Smith', 'New York', '10th'),
+       (2, 'Jane Doe', 'Chicago', '11th'),
+       (3, 'Bob Johnson', 'Los Angeles', '12th'),
+       (4, 'Alice Williams', 'San Francisco', '10th'),
+       (5, 'Mike Brown', 'Boston', '11th');
+
+
+CREATE TABLE Subject (
+    Scode VARCHAR(10) PRIMARY KEY,
+    subject_name VARCHAR(20) NOT NULL
+);
+
+
+INSERT INTO Subject (Scode, subject_name)
+VALUES ('MATH', 'Mathematics'),
+       ('SCI', 'Science'),
+       ('HIST', 'History'),
+       ('ENG', 'English'),
+       ('ART', 'Art');
+
+
+CREATE TABLE Student_Subject (
+    Rollag INTEGER NOT NULL,
+    Scode VARCHAR(10) NOT NULL,
+    marks_scored INTEGER NOT NULL,
+    PRIMARY KEY (Rollag, Scode),
+    FOREIGN KEY (Rollag) REFERENCES Student (Rollag),
+    FOREIGN KEY (Scode) REFERENCES Subject (Scode)
+);
+
+INSERT INTO Student_Subject (Rollag, Scode, marks_scored)
+VALUES (1, 'MATH', 90),
+       (1, 'SCI', 80),
+       (1, 'HIST', 85),
+       (2, 'ENG', 95),
+       (2, 'ART', 90);
+
+
+
+Create a View
+
+1. To display the students naine who scored more than 80 marks in DBMS Subject 
+
+
+CREATE VIEW High_Scorers_DBMS AS
+    SELECT s.sname
+    FROM Student s
+    INNER JOIN Student_Subject ss ON s.Rollag = ss.Rollag
+    INNER JOIN Subject su ON ss.Scode = su.Scode
+    WHERE su.subject_name = 'DBMS' AND ss.marks_scored > 80;
+
+SELECT * FROM High_Scorers_DBMS;
+
+2. To display student details of class TYBCA.
+
+
+CREATE VIEW Students_TYBCA AS
+    SELECT s.*
+    FROM Student s
+    WHERE s.class = 'TYBCA';
+
+SELECT * FROM High_Scorers_DBMS;
+
+
+
+quetion2 ::::::::::::::::::::::::::::::::::::::::
+
+
+Q.2) Using above database solve following questions:
+
+1. Write a trigger after deleting a student record from the student table. Display the message "student record is being deleted". 
+
+
+CREATE TRIGGER Student_Delete_Trigger
+AFTER DELETE ON Student
+FOR EACH ROW
+BEGIN
+    SELECT 'student record is being deleted';
+END;
+
+
+2. Write a stored function to accept student name as an input parameter and display their
+subject information.
+
+CREATE FUNCTION Get_Subject_Info (p_sname VARCHAR(30))
+RETURNS TABLE (Scode VARCHAR(10), subject_name VARCHAR(20), marks_scored INTEGER)
+BEGIN
+    RETURN SELECT su.Scode, su.subject_name, ss.marks_scored
+           FROM Subject su
+           INNER JOIN Student_Subject ss ON su.Scode = ss.Scode
+           INNER JOIN Student s ON ss.Rollag = s.Rollag
+           WHERE s.sname = p_sname;
+END;
+
+
+SELECT * FROM Get_Subject_Info('John Smith');
+
+

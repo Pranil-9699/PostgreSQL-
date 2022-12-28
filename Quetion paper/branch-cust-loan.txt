@@ -1,0 +1,147 @@
+Bank database
+Consider the following Entities and their Relationships for Bank database.
+
+Branch (bid integer, brname char (30), brcity char (10))
+Customer (cno integer, cname char (20), caddr char (35), city char(20))
+Loan_application (lno integer, l_amt_require money, l_amt_approved money, l_date date)
+
+The relationships are as follows:
+
+Branch, Customer, Loan_application are related with ternary relationship.
+Ternary (bid integer, cno integer, lno integer).
+
+Constraints: Primary key, I_amt_required should be greater than zero.
+
+
+
+CREATE TABLE Branch (
+    bid INTEGER PRIMARY KEY,
+    brname CHAR(30) NOT NULL,
+    brcity CHAR(10) NOT NULL
+);
+
+INSERT INTO Branch (bid, brname, brcity)
+VALUES (1, 'Downtown Branch', 'New York'),
+       (2, 'Midtown Branch', 'New York'),
+       (3, 'Uptown Branch', 'New York'),
+       (4, 'Northside Branch', 'Chicago'),
+       (5, 'Southside Branch', 'Chicago');
+
+
+
+
+CREATE TABLE Customer (
+    cno INTEGER PRIMARY KEY,
+    cname CHAR(20) NOT NULL,
+    caddr CHAR(35) NOT NULL,
+    city CHAR(20) NOT NULL
+);
+
+INSERT INTO Customer (cno, cname, caddr, city)
+VALUES (101, 'John Smith', '123 Main Street', 'New York'),
+       (102, 'Jane Doe', '456 Park Avenue', 'New York'),
+       (103, 'Bob Johnson', '789 Fifth Avenue', 'New York'),
+       (104, 'Alice Williams', '246 Lake Shore Drive', 'Chicago'),
+       (105, 'Mike Brown', '135 Michigan Avenue', 'Chicago');
+
+
+CREATE TABLE Loan_application (
+    lno INTEGER PRIMARY KEY,
+    l_amt_require MONEY NOT NULL,
+    l_amt_approved MONEY NOT NULL,
+    l_date DATE NOT NULL
+);
+
+
+INSERT INTO Loan_application (lno, l_amt_require, l_amt_approved, l_date)
+VALUES (201, 10000, 8000, '2022-01-01'),
+       (202, 20000, 15000, '2022-02-01'),
+       (203, 30000, 25000, '2022-03-01'),
+       (204, 40000, 35000, '2022-04-01'),
+       (205, 50000, 45000, '2022-05-01');
+
+
+
+CREATE TABLE Ternary (
+    bid INTEGER NOT NULL,
+    cno INTEGER NOT NULL,
+    lno INTEGER NOT NULL,
+    PRIMARY KEY (bid, cno, lno),
+    FOREIGN KEY (bid) REFERENCES Branch (bid),
+    FOREIGN KEY (cno) REFERENCES Customer (cno),
+    FOREIGN KEY (lno) REFERENCES Loan_application (lno)
+);
+
+
+
+INSERT INTO Ternary (bid, cno, lno)
+VALUES (1, 101, 201),
+       (2, 102, 202),
+       (3, 103, 203),
+       (4, 104, 204),
+       (5, 105, 205);
+
+
+
+
+Create a View:
+
+1. To display names of customers for the 'Pimpri' branch. 
+
+
+CREATE VIEW Customers_Pimpri AS
+    SELECT c.cname
+    FROM Customer c
+    INNER JOIN Ternary t ON c.cno = t.cno
+    INNER JOIN Branch b ON t.bid = b.bid
+    WHERE b.brcity = 'Pimpri';
+
+SELECT * FROM Customers_Pimpri;
+
+
+
+
+2. To display names of customers who have taken loan from the branch in the same city theylive.
+
+
+CREATE VIEW Customers_Same_City_Loan AS
+    SELECT c.cname
+    FROM Customer c
+    INNER JOIN Ternary t ON c.cno = t.cno
+    INNER JOIN Branch b ON t.bid = b.bid
+    WHERE c.city = b.brcity;
+
+
+SELECT * FROM Customers_Same_City_Loan;
+
+//////////////////////////////////////////////////////////////////////
+
+Q.2) Using above database solve following questions: 
+
+1. Write a trigger which will execute when you update customer number from customer table. Display message "You can't change existing customer number"
+
+CREATE TRIGGER Customer_Number_Update_Trigger
+BEFORE UPDATE ON Customer
+FOR EACH ROW
+BEGIN
+    IF NEW.cno <> OLD.cno THEN
+        SELECT 'You can''t change existing customer number';
+    END IF;
+END;
+
+
+
+
+2. Write a stored function to accept branch name as an input parameter and display loan information of that branch.
+
+CREATE FUNCTION Get_Loan_Info (p_brname CHAR(30))
+RETURNS TABLE (lno INTEGER, l_amt_require MONEY, l_amt_approved MONEY, l_date DATE)
+BEGIN
+    RETURN SELECT l.lno, l.l_amt_require, l.l_amt_approved, l.l_date
+           FROM Loan_application l
+           INNER JOIN Ternary t ON l.lno = t.lno
+           INNER JOIN Branch b ON t.bid = b.bid
+           WHERE b.brname = p_brname;
+END;
+
+select function Get_Loan_Info('Uptown Branch');

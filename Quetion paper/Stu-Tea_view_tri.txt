@@ -1,0 +1,127 @@
+Student-Teacher Database 
+ Consider the following Entities and their Relationships for Student-Teacher database.  
+ Student (s_no int, s_name varchar (20), s_class varchar (10), s_addr varchar (30))  
+ Teacher (t_no int, t_name varchar (20), qualification varchar (15), experience int) 
+ Relationship between Student and Teacher is many to many with descriptive attribute subject. 
+ Constraints: Primary Key, 
+ s_class should not be null. 
+ 
+
+CREATE TABLE Student (
+  s_no int PRIMARY KEY,
+  s_name varchar(20),
+  s_class varchar(10) NOT NULL,
+  s_addr varchar(30)
+);
+
+INSERT INTO Student (s_no, s_name, s_class, s_addr)
+VALUES (1, 'John', 'A', 'New York'),
+       (2, 'Jane', 'B', 'Chicago'),
+       (3, 'Chris', 'C', 'San Francisco'),
+       (4, 'Emily', 'D', 'Los Angeles'),
+       (5, 'Sam', 'E', 'Boston');
+
+
+
+CREATE TABLE Teacher (
+  t_no int PRIMARY KEY,
+  t_name varchar(20),
+  qualification varchar(15),
+  experience int
+);
+
+INSERT INTO Teacher (t_no, t_name, qualification, experience)
+VALUES (1, 'Mr. Smith', 'B.Sc.', 5),
+       (2, 'Ms. Jones', 'M.Sc.', 10),
+       (3, 'Mr. Brown', 'Ph.D.', 15),
+       (4, 'Ms. Davis', 'B.Ed.', 20),
+       (5, 'Mr. Taylor', 'M.Ed.', 25);
+
+
+
+CREATE TABLE StudentTeacher (
+  s_no int REFERENCES Student(s_no),
+  t_no int REFERENCES Teacher(t_no),
+  subject varchar(20),
+  PRIMARY KEY (s_no, t_no)
+);
+
+
+INSERT INTO StudentTeacher (s_no, t_no, subject)
+VALUES (1, 1, 'Mathematics'),
+       (1, 2, 'Science'),
+       (2, 1, 'Mathematics'),
+       (2, 2, 'Science'),
+       (3, 3, 'History'),
+       (4, 4, 'English'),
+       (4, 5, 'Art'),
+       (5, 2, 'Science'),
+       (5, 3, 'History');
+
+
+
+ Create a View using above
+
+1. To display student athos who are taught by most experienced teacher
+
+
+CREATE VIEW StudentDetails_ExperiencedTeacher AS
+SELECT s.s_no, s.s_name, s.s_class, s.s_addr, t.t_name, t.experience
+FROM Student s
+INNER JOIN StudentTeacher st ON s.s_no = st.s_no
+INNER JOIN Teacher t ON st.t_no = t.t_no
+WHERE t.experience = (SELECT MAX(experience) FROM Teacher);
+
+select StudentDetails_ExperiencedTeacher;
+
+
+
+2. To display subjects taught by each teacher.
+
+CREATE VIEW TeacherSubjects AS
+SELECT t.t_no, t.t_name, st.subject
+FROM Teacher t
+INNER JOIN StudentTeacher st ON t.t_no = st.t_no
+GROUP BY t.t_no, t.t_name, st.subject;
+
+select TeacherSubjects;
+
+
+
+Q.2) Using above database solve following questions:
+
+
+1. Write a trigger before inserting the student record. If the sno is less than or equal to zero then display the message Invalid student number.
+
+
+CREATE TRIGGER student_number_validation
+BEFORE INSERT ON Student
+FOR EACH ROW
+BEGIN
+  IF NEW.s_no <= 0 THEN
+    RAISE EXCEPTION 'Invalid student number';
+  END IF;
+END;
+
+
+
+
+2. Write stored function to count the number of students studying a subject named the subject's name '.'
+( Accept the subject's name as an input parameters. Display error message for invalid subject name).
+
+
+CREATE FUNCTION get_student_count(subject varchar) RETURNS integer
+AS '
+BEGIN
+  RETURN (SELECT COUNT(*) FROM StudentTeacher WHERE subject = subject);
+END;
+'LANGUAGE 'plpgsql';
+
+select function get_student_count('Mathematics');
+
+
+
+
+
+
+
