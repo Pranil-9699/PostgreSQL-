@@ -1,0 +1,117 @@
+2) Person-Area Database
+Consider the following Entities and their Relationships for Person-Area database. 
+Person (pno integer, pname varchar (20), birthdate date, income money)
+Area (aname varchar (20), area_type varchar (5))
+An area can have one or more persons living in it, but a person belongs to exactly one area.
+Constraints: Primary Key, area_type can be either ‘urban’ or ‘rural’
+Solve the following Queries in PostgreSQL:
+
+
+
+CREATE TABLE Person (
+  pno integer PRIMARY KEY,
+  pname varchar (20),
+  birthdate date,
+  income money,
+  area_name varchar (20) REFERENCES Area(aname)
+);
+
+CREATE TABLE Area (
+  aname varchar (20) PRIMARY KEY,
+  area_type varchar (5) CHECK (area_type IN ('urban', 'rural'))
+);
+
+
+
+INSERT INTO Area (aname, area_type) VALUES
+  ('Pune', 'urban'),
+  ('Delhi', 'urban'),
+  ('Mumbai', 'urban'),
+  ('Bangalore', 'urban'),
+  ('Chennai', 'urban');
+
+INSERT INTO Person (pno, pname, birthdate, income, area_name) VALUES
+  (1, 'John Doe', '1980-01-01', 5000, 'Pune'),
+  (2, 'Jane Doe', '1985-03-15', 4000, 'Delhi'),
+  (3, 'Bob Smith', '1990-07-20', 6000, 'Mumbai'),
+  (4, 'Alice Smith', '1995-11-25', 3500, 'Bangalore'),
+  (5, 'Charlie Brown', '2000-02-28', 7500, 'Chennai');
+
+
+
+1. List the names of all persons living in ‘Pune’ area.
+
+SELECT pname
+FROM Person p
+JOIN Area a ON p.aname = a.aname
+WHERE a.aname = 'Pune';
+
+
+2. List the details of all people whose names start with the alphabet ‘D’.
+
+SELECT *
+FROM Person
+WHERE pname LIKE 'D%';
+
+
+3. Count area wise persons whose income is above_ .
+
+
+SELECT a.aname, COUNT(p.pno) AS num_persons
+FROM Person p
+JOIN Area a ON p.aname = a.aname
+WHERE p.income > _
+GROUP BY a.aname;
+
+4. List the names of all people whose income is between and
+
+SELECT pname
+FROM Person
+WHERE income BETWEEN AND ;
+
+
+5. List the names of all people whose birthday falls in the month of August.
+
+SELECT pname
+FROM Person
+WHERE EXTRACT(MONTH FROM birthdate) = 8;
+
+
+6. List names of persons whose income is same.
+
+SELECT pname
+FROM Person p1
+WHERE EXISTS (
+    SELECT *
+    FROM Person p2
+    WHERE p1.income = p2.income AND p1.pno <> p2.pno
+);
+
+
+7. Display area wise maximum income of person.
+
+SELECT a.aname, MAX(p.income) AS max_income
+FROM Person p
+JOIN Area a ON p.aname = a.aname
+GROUP BY a.aname;
+
+
+
+8. Update the income of all people living in rural area by 10%.
+
+
+UPDATE Person p
+SET income = income * 1.1
+FROM Area a
+WHERE p.area_name = a.aname AND a.area_type = 'rural';
+
+
+9. Delete the record of person which has income below .
+
+DELETE FROM Person WHERE income < _;
+
+
+10. Display person details in descending order of their names.
+
+SELECT * FROM Person ORDER BY pname DESC;
+
